@@ -1,6 +1,7 @@
 # Copyright (c) 2016 Json Lee. All rights reserved.
 # For more info, see [here](https://github.com/lijiansong) or my [github page](https://lijiansong.github.io/)
-LLVM_CONFIG?=llvm-config
+#LLVM_CONFIG?=llvm-config
+LLVM_CONFIG?=../../llvm-project/build/bin/llvm-config
 
 ifndef VERBOSE
 QUIET:=@
@@ -24,6 +25,8 @@ default: $(PROJECT)
 #%.o : $(SRC_DIR)/%.cpp
 $(PROJECT_OBJECTS) : $(SRC_DIR)/LLVMAssignment.cpp
 	@echo Compiling $*.cpp
+	@echo llvm-config $(LLVM_CONFIG)
+	$(LLVM_CONFIG) --version
 	$(QUIET)$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
 $(PROJECT) : $(PROJECT_OBJECTS)

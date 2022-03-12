@@ -1027,7 +1027,7 @@ class LivenessVisitor : public DataflowVisitor<struct LivenessInfo> {
             tmp.push_back(operandRange1[0] * operandRange2[1]);
             tmp.push_back(operandRange1[1] * operandRange2[0]);
             tmp.push_back(operandRange1[1] * operandRange2[1]);
-            sort(tmp.begin(), tmp.end());
+            std::sort(tmp.begin(), tmp.end());
             resultMin = *(tmp.begin());
             resultMax = *(tmp.end() - 1);
           }  // end of else
@@ -1304,7 +1304,7 @@ class LivenessVisitor : public DataflowVisitor<struct LivenessInfo> {
           }
         }  // end of else
       }    // end of for
-      sort(range.begin(), range.end());
+      std::sort(range.begin(), range.end());
       // for(size_t i=0;i<range.size();++i)
       // {
       //  errs()<<range[i]<<'\n';

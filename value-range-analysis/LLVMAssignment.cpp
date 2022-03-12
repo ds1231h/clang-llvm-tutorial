@@ -15,11 +15,16 @@
 //#include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/CommandLine.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/SystemUtils.h>
+#include <llvm/Bitcode/BitcodeWriterPass.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/ToolOutputFile.h>
 #include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Utils.h>
 
 #include "Liveness.h"
 #include "llvm/IR/Function.h"
@@ -50,6 +55,16 @@ static cl::opt<std::string> InputFilename(cl::Positional,
                                           cl::desc("<filename>.bc"),
                                           cl::init(""));
 
+static cl::opt<bool> PreserveBitcodeUseListOrder(
+				"preserve-bc-uselistorder",
+				cl::desc("Preserve use-list order when writing LLVM bitcode."),
+				cl::init(true), cl::Hidden);
+
+static cl::opt<bool> PreserveAssemblyUseListOrder(
+				"preserve-ll-uselistorder",
+				cl::desc("Preserve use-list order when writing LLVM assembly."),
+				cl::init(false), cl::Hidden);
+
 int main(int argc, char **argv) {
   // LLVMContext &Context = getGlobalContext();
   static LLVMContext Context;
@@ -72,5 +87,23 @@ int main(int argc, char **argv) {
   Passes.add(new LoopInfoWrapperPass());
   /// Your pass to print Function and Call Instructions
   Passes.add(new Liveness());
-  Passes.run(*M.get());
+
+	std::error_code EC;
+	ToolOutputFile Out("output", EC, llvm::sys::fs::OF_None);
+	if (EC) {
+		errs() << EC.message() << '\n';
+		return 1;
+	}
+
+	bool OutputAssembly = false;
+	if (OutputAssembly)
+		Passes.add(
+						llvm::createPrintModulePass(Out.os(), "", PreserveAssemblyUseListOrder));
+	else if (!llvm::CheckBitcodeOutputToConsole(Out.os()))
+		Passes.add(llvm::createBitcodeWriterPass(Out.os(), PreserveBitcodeUseListOrder));
+
+	Passes.run(*M.get());
+
+	// Declare success.
+	Out.keep();
 }
